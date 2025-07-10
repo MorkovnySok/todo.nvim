@@ -2,12 +2,26 @@ local M = {}
 
 local todo_file = vim.fn.expand("~/.todo.txt")
 
--- Toggle between [ ] and [x] on the current line
 local function toggle_item()
 	local line = vim.api.nvim_get_current_line()
-	local toggled_line = line:gsub("%[ %]", "[x]"):gsub("%[x%]", "[ ]")
-	vim.api.nvim_set_current_line(toggled_line)
-	vim.cmd("w") -- Auto-save
+	local new_line
+
+	-- Handle [ ] -> [x]
+	if line:match("%- %[ %]") then
+		new_line = line:gsub("%[ %]", "[x]")
+	-- Handle [x] -> [ ]
+	elseif line:match("%- %[x%]") then
+		new_line = line:gsub("%[x%]", "[ ]")
+	-- Handle no checkbox case
+	elseif line:match("%- ") then
+		new_line = line:gsub("%- ", "- [ ] ")
+	-- Handle completely empty line
+	else
+		new_line = "- [ ] " .. line
+	end
+
+	vim.api.nvim_set_current_line(new_line)
+	vim.cmd("w")
 end
 
 -- Add a new empty TODO item below current line
