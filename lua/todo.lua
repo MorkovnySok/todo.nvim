@@ -2,6 +2,22 @@ local M = {}
 
 local todo_file = vim.fn.expand("~/.todo.txt")
 
+-- Toggle between [ ] and [x] on the current line
+local function toggle_item()
+	local line = vim.api.nvim_get_current_line()
+	local toggled_line = line:gsub("%[ %]", "[x]"):gsub("%[x%]", "[ ]")
+	vim.api.nvim_set_current_line(toggled_line)
+	vim.cmd("w") -- Auto-save
+end
+
+-- Add a new empty TODO item below current line
+local function add_new_item()
+	local lnum = vim.api.nvim_win_get_cursor(0)[1]
+	vim.api.nvim_buf_set_lines(0, lnum, lnum, false, { "- [ ] " })
+	vim.api.nvim_win_set_cursor(0, { lnum + 1, 5 }) -- Move cursor inside brackets
+	vim.cmd("w") -- Auto-save
+end
+
 -- Open TODO popup and prepend a new entry with the current file:line
 function M.add_todo_with_path()
 	local file_path = vim.fn.expand("%:~") -- Relative to $HOME (e.g., ~/projects/foo.lua)
@@ -17,7 +33,6 @@ function M.add_todo_with_path()
 	vim.api.nvim_win_set_cursor(0, { vim.api.nvim_buf_line_count(buf), #todo_prefix })
 end
 
--- Toggle the TODO popup (same as before)
 function M.toggle()
 	local buf = vim.fn.bufadd(todo_file)
 	vim.fn.bufload(buf)
@@ -35,10 +50,20 @@ function M.toggle()
 		border = "rounded",
 	})
 
-	-- Keymaps
-	vim.api.nvim_buf_set_keymap(buf, "n", "q", "<cmd>lua require('todo').close()<CR>", { silent = true })
-	vim.api.nvim_buf_set_keymap(buf, "n", "<Esc>", "<cmd>lua require('todo').close()<CR>", { silent = true })
-	vim.api.nvim_buf_set_keymap(buf, "n", "<CR>", "<cmd>lua require('todo').jump_to_file()<CR>", { silent = true })
+	-- Keymaps specific to the TODO buffer
+	local opts = { silent = true, buffer = buf }
+	vim.keymap.set("n", " ", toggle_item, opts) -- Space to toggle
+	vim.keymap.set("n", "<CR>", add_new_item, opts) -- Enter to add new item
+	vim.keymap.set("n", "q", M.close, opts)
+	vim.keymap.set("n", "<Esc>", M.close, opts)
+
+	-- Auto-save when leaving the buffer
+	vim.api.nvim_create_autocmd("BufLeave", {
+		buffer = buf,
+		callback = function()
+			vim.cmd("w")
+		end,
+	})
 end
 
 function M.jump_to_file()
