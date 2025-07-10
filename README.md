@@ -10,7 +10,17 @@ Quick popup TODO list inside a neovim
     file = "~/.todo.txt",  -- Customize TODO file path
   },
   keys = {
-    { "<leader>td", desc = "Toggle TODO popup" },
-    { "<leader>tdp", desc = "Add TODO with path" },
+    -- Toggle TODO popup
+    {
+      "<leader>td",
+      function() require("todo").toggle() end,
+      desc = "Toggle TODO popup",
+    },
+    -- Add TODO with current file path
+    {
+      "<leader>tdp",
+      function() require("todo").add_todo_with_path() end,
+      desc = "Add TODO with path",
+    },
   },
 }
