@@ -70,6 +70,7 @@ function M.toggle()
 	vim.keymap.set("n", "<CR>", add_new_item, opts) -- Enter to add new item
 	vim.keymap.set("n", "q", M.close, opts)
 	vim.keymap.set("n", "<Esc>", M.close, opts)
+	vim.keymap.set("n", "gd", M.jump_to_file, opts)
 
 	-- Auto-save when leaving the buffer
 	vim.api.nvim_create_autocmd("BufLeave", {
